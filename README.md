@@ -126,6 +126,35 @@ NTU：
 # Folklore的PRP项目
 可以等一等，最后结项会出具一个完整的报告，到时候就看懂了。
 
+构建自动化文本分析流程，利用大语言模型（LLM）对 2,500+ 条跨文化神话母题（motifs）进行提示词工程，重点识别其中的 法律相关语义特征。为增强判定的语义依据，引入 检索增强生成（RAG） 框架，将外部法律文献与指标说明作为上下文，辅助模型在打分时对齐真实制度标准。
+
+'''python
+from openai import OpenAI
+import numpy as np
+
+client = OpenAI()
+
+texts = [
+    "Article 1: Everyone is equal before the law.",
+    "Article 2: No one shall be arbitrarily deprived of liberty."
+]
+
+embeddings = []
+for text in texts:
+    response = client.embeddings.create(
+        model="text-embedding-3-small",
+        input=text
+    )
+    embeddings.append(response.data[0].embedding)
+
+print(np.array(embeddings).shape)  # (2, 1536)
+
+
+'''
+
+
+
+为进一步提升可靠性，采用 Self-Consistency（SC）方法 对大模型在多次检索与推理下的输出进行集成投票，显著降低了单次打分的随机性。随后，将提取出的法律语义指标与各国 官方法治发展水平数据 进行稳健回归建模，验证了文化文本特征与现实制度变量之间的统计相关性。最后，基于训练得到的回归方程，对缺失官方法律评分的国家进行了 法治水平预测，展现了 LLM 在复杂文本到量化指标映射中的稳定性与应用潜力。
 
 
 
