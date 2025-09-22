@@ -128,7 +128,7 @@ NTU：
 
 构建自动化文本分析流程，利用大语言模型（LLM）对 2,500+ 条跨文化神话母题（motifs）进行提示词工程，重点识别其中的 法律相关语义特征。为增强判定的语义依据，引入 检索增强生成（RAG） 框架，将外部法律文献与指标说明作为上下文，辅助模型在打分时对齐真实制度标准。
 
-'''python
+```python
 from openai import OpenAI
 import numpy as np
 
@@ -149,12 +149,42 @@ for text in texts:
 
 print(np.array(embeddings).shape)  # (2, 1536)
 
+```
+**此代码讲述了如何把《法律入门》这本书的内容切割成小块，在向量化之后存入数据库**
+```python
+import faiss
+import numpy as np
 
-'''
+# 假设 embeddings 已经是 N × 1536 的 numpy 数组
+dimension = 1536
+index = faiss.IndexFlatL2(dimension)
+index.add(np.array(embeddings).astype("float32"))
+
+# 检索一个新问题
+query = "human rights law equality"
+query_emb = client.embeddings.create(
+    model="text-embedding-3-small",
+    input=query
+).data[0].embedding
+
+D, I = index.search(np.array([query_emb], dtype="float32"), k=3)
+print(I)  # 返回最相似的文本索引
+
+```
+**这个是讲述在给每一条motif打分的时候，如何先从数据库中检索一段书里的内容作为信息增强，再结合prompt进行打分。**
 
 
 
-为进一步提升可靠性，采用 Self-Consistency（SC）方法 对大模型在多次检索与推理下的输出进行集成投票，显著降低了单次打分的随机性。随后，将提取出的法律语义指标与各国 官方法治发展水平数据 进行稳健回归建模，验证了文化文本特征与现实制度变量之间的统计相关性。最后，基于训练得到的回归方程，对缺失官方法律评分的国家进行了 法治水平预测，展现了 LLM 在复杂文本到量化指标映射中的稳定性与应用潜力。
+
+```python
+为进一步提升可靠性，采用 Self-Consistency（SC）方法 对大模型在多次检索与推理下的输出进行集成投票，显著降低了单次打分的随机性。
+```
+**这个是提示词工程的一部分，可以参考一下实习工作里面的内容**
+
+
+随后，将提取出的法律语义指标与各国 官方法治发展水平数据 进行稳健回归建模，验证了一个地区神话传说中“含法量”与当前社会法制情况之间的统计相关性。
+
+最后，基于训练得到的回归方程，对缺失官方法律评分的国家进行了 法治水平预测，展现了 LLM 在复杂文本到量化指标映射中的稳定性与应用潜力。
 
 
 
